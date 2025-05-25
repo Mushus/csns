@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { awsLambdaRequestHandler } from '@hono/lambda-adapter';
+import { handle } from 'hono/aws-lambda';
 import { processInboxActivity } from './activitypub/inbox';
 import { APObject } from './activitypub/types'; // For type casting
 
@@ -47,4 +47,4 @@ app.get('/health', (c) => {
   return c.json({ status: 'ok', message: 'Hono app is running' });
 });
 
-export const handler = awsLambdaRequestHandler(app);
+export const handler = handle(app);
