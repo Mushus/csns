@@ -1,33 +1,47 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as lambda from 'aws-cdk-lib/aws-lambda'; // Keep for Runtime, FunctionUrlAuthType
+import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
+import * as path from 'path'; // For path.join
 
 export class ActivityPubStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // AWS Lambda Function
-    const func = new lambda.Function(this, 'ActivityPubLambda', {
-      runtime: lambda.Runtime.NODEJS_18_X,
-      handler: 'index.handler',
-      code: lambda.Code.fromInline('exports.handler = async () => { console.log("Hello from Lambda!"); return { statusCode: 200, body: "Hello from Lambda!" }; };'),
-    });
-
-    // Lambda Function URL
-    const funcUrl = func.addFunctionUrl({
-      authType: lambda.FunctionUrlAuthType.NONE, // Or AWS_IAM if you want to restrict access
-    });
-
     // Amazon DynamoDB Table
     const table = new dynamodb.Table(this, 'ActivityPubTable', {
       partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST, // On-demand capacity
-      tableName: 'ActivityPubTable',
+      tableName: 'ActivityPubTable', // Explicit table name
       removalPolicy: cdk.RemovalPolicy.DESTROY, // DESTROY for testing, RETAIN or SNAPSHOT for production
+    });
+
+    // AWS Lambda Function using NodejsFunction
+    const func = new nodejs.NodejsFunction(this, 'ActivityPubLambda', {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      entry: path.join(__dirname, '../../../../src/index.ts'), // Correct path from cdk/lib to src/index.ts
+      handler: 'handler', // The exported handler function name in src/index.ts
+      // Optional: specify bundling options if needed, e.g.,
+      // bundling: {
+      //   externalModules: ['aws-sdk'], // Exclude AWS SDK as it's available in Lambda
+      //   minify: true, // Minify code
+      //   sourceMap: true, // Include source maps
+      // },
+      environment: { // Pass environment variables to Lambda
+        ACTIVITYPUB_TABLE_NAME: table.tableName,
+      },
+    });
+
+    // Grant the Lambda function read/write permissions to the DynamoDB table
+    table.grantReadWriteData(func);
+
+    // Lambda Function URL
+    const funcUrl = func.addFunctionUrl({
+      authType: lambda.FunctionUrlAuthType.NONE, // Or AWS_IAM if you want to restrict access
     });
 
     // Amazon S3 Bucket

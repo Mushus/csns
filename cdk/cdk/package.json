@@ -23,6 +23,7 @@
     "aws-cdk-lib": "2.196.0",
     "constructs": "^10.0.0",
     "hono": "^4.7.10",
-    "valibot": "^1.1.0"
+    "valibot": "^1.1.0",
+    "aws-cdk-lib/aws-lambda-nodejs": "2.196.0"
   }
 }
