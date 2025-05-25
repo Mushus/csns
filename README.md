@@ -21,7 +21,20 @@ This project is a minimal implementation of an ActivityPub server using:
 
 ## Development
 
-(To be filled in later with build, test, and deploy commands)
+To run the server locally for development, use the following command:
+
+```bash
+pnpm dev
+```
+
+This will start a local development server on `http://localhost:3000`. 
+The server will automatically reload when code changes are made.
+
+When running locally, development-specific routes are available. For example, you can access:
+- `http://localhost:3000/dev/test` - A simple test endpoint for development.
+- `http://localhost:3000/health` - The standard health check endpoint.
+
+(Further details on build, test, and general deploy commands to be filled in later)
 
 ## Deployment
 
